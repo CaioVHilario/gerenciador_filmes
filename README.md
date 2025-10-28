@@ -1,6 +1,6 @@
 # API - Gerenciador de Lista de Filmes
 
-[![Status](https://img.shields.io/badge/status-em_desenvolvimento-yellow)](https://github.com/SEU_USUARIO/SEU_REPOSITORIO)
+[![Status](https://img.shields.io/badge/status-em_desenvolvimento-yellow)](https://https://github.com/CaioVHilario/gerenciador_filmes)
 
 API RESTful para gerenciar uma coleção de filmes. Este projeto está sendo construído como parte dos meus estudos em desenvolvimento backend com Python.
 
