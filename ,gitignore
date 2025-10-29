@@ -11,6 +11,7 @@ __pycache__/
 *.pyd
 
 # Arquivos de Banco de Dados
+data/
 *.db
 *.sqlite
 *.sqlite3
