@@ -6,7 +6,7 @@ class MovieCreate(BaseModel):
     title: str
     year: int
     director: str
-    rating: float = 0.0
+    rating: int
     genre: str
     description: Optional[str] = None
 

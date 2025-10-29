@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 
 from .models import Movie
 from .database import create_db_and_tables, get_session
+from .schemas import MovieCreate
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
@@ -29,3 +30,13 @@ def read_root():
 def read_Movies(session: Session = Depends(get_session)):
     movies = session.exec(select(Movie)).all()
     return movies
+
+@app.post("/movies/", response_model=Movie)
+def create_movie(movie: MovieCreate, session: Session = Depends(get_session)):
+    db_movie = Movie(**movie.model_dump())
+
+    session.add(db_movie)
+    session.commit()
+    session.refresh(db_movie)
+
+    return db_movie
