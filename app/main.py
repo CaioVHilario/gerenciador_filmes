@@ -40,3 +40,11 @@ def create_movie(movie: MovieCreate, session: Session = Depends(get_session)):
     session.refresh(db_movie)
 
     return db_movie
+
+@app.get("/movies/", response_model=list[Movie])
+def read_all_movies(session: Session = Depends(get_session)):
+    statement = select(Movie)
+    results = session.exec(statement)
+    movies = results.all()
+
+    return movies
