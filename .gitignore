@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Ambiente Virtual
 venv/
 /venv/
@@ -11,9 +12,43 @@ __pycache__/
 *.pyd
 
 # Arquivos de Banco de Dados
+=======
+# 🧠 Ambiente Virtual
+venv/
+.venv/
+ENV/
+env/
+Env/
+
+# 🐍 Cache e Compilação Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# 🗃️ Banco de Dados e Dados Locais
+data/
+>>>>>>> dev
 *.db
 *.sqlite
 *.sqlite3
 
+<<<<<<< HEAD
 # Arquivos de IDE (Ex: VSCode)
 .vscode/
+=======
+# ⚙️ Configurações de IDEs e Editores
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 🧪 Arquivos temporários e logs
+*.log
+*.tmp
+.DS_Store
+
+# 📦 Build e distribuição (caso futuramente publique pacotes)
+build/
+dist/
+*.egg-info/
+>>>>>>> dev

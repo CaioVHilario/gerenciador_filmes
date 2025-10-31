@@ -21,8 +21,14 @@ O objetivo principal é implementar um CRUD (Create, Read, Update, Delete) compl
 * [x] Configuração inicial do projeto.
 * [x] Definição do modelo de dados (`Movie`).
 * [x] Configuração do banco de dados SQLite e criação de tabelas no *lifespan* da aplicação.
-* [ ] Endpoint: `POST /movies` (Create)
-* [ ] Endpoint: `GET /movies` (Read All)
-* [ ] Endpoint: `GET /movies/{id}` (Read One)
-* [ ] Endpoint: `PATCH /movies/{id}` (Update)
-* [ ] Endpoint: `DELETE /movies/{id}` (Delete)
+* [x] Endpoint: `POST /movies` (Create)
+* [x] Endpoint: `GET /movies` (Read All)
+* [x] Endpoint: `GET /movies/{id}` (Read One)
+* [x] Endpoint: `PATCH /movies/{id}` (Update)
+* [x] Endpoint: `DELETE /movies/{id}` (Delete)
+* [ ] Endpoint: `GET /movies/title/{title}` (Busca por título)
+* [ ] Endpoint: `GET /movies/director/{director}` (Busca por diretor)
+* [ ] Endpoint: `GET /movies/genre/{genre}` (Busca por gênero)
+* [ ] Endpoint: `GET /movies/search` (Filtros múltiplos)
+* [ ] Endpoint `GET /movies/instant` (Busca em tempo real)
+* [ ] Endpoint `GET /movies/smart` (Busca inteligente)
