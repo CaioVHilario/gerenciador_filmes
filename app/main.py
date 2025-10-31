@@ -70,7 +70,7 @@ def read_movie(movie_id: int, session: Session = Depends(get_session)):
     
     return movie
 
-#(UPDATE) - Atualiza campos do objeto existente (parcial)
+#UPDATE - Atualiza campos do objeto existente (parcial)
 @app.patch("/movies/{movie_id}", response_model=MovieResponse)
 def update_movie(
     movie_id: int,
@@ -101,3 +101,29 @@ def update_movie(
     session.refresh(db_movie)
 
     return db_movie
+
+#DELETE - Deleta um filme
+@app.delete("/movies/{movie_id}")
+def delete_movie(
+    movie_id: int,
+    session: Session = Depends(get_session)
+):
+    db_movie = session.get(Movie, movie_id)
+
+    if not db_movie:
+        raise HTTPException(
+            status_code = status.HTTP_404_NOT_FOUND,
+            detail = f"Movie with ID {movie_id} not found."
+        )
+    
+    session.delete(db_movie)
+    session.commit()
+
+    return{
+        "message": f"Movie {db_movie.title} (ID: {movie_id}), successfully deleted.",
+        "deleted_movie": {
+            "id": movie_id,
+            "title": db_movie.title,
+            "director": db_movie.director
+        }
+    }

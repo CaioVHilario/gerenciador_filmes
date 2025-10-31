@@ -25,7 +25,7 @@ O objetivo principal é implementar um CRUD (Create, Read, Update, Delete) compl
 * [x] Endpoint: `GET /movies` (Read All)
 * [x] Endpoint: `GET /movies/{id}` (Read One)
 * [x] Endpoint: `PATCH /movies/{id}` (Update)
-* [ ] Endpoint: `DELETE /movies/{id}` (Delete)
+* [x] Endpoint: `DELETE /movies/{id}` (Delete)
 * [ ] Endpoint: `GET /movies/title/{title}` (Busca por título)
 * [ ] Endpoint: `GET /movies/director/{director}` (Busca por diretor)
 * [ ] Endpoint: `GET /movies/genre/{genre}` (Busca por gênero)
