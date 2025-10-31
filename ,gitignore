@@ -1,20 +1,33 @@
-# Ambiente Virtual
+# 🧠 Ambiente Virtual
 venv/
-/venv/
 .venv/
-/.venv/
+ENV/
+env/
+Env/
 
-# Arquivos de Cache do Python
+# 🐍 Cache e Compilação Python
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
+*$py.class
 
-# Arquivos de Banco de Dados
+# 🗃️ Banco de Dados e Dados Locais
 data/
 *.db
 *.sqlite
 *.sqlite3
 
-# Arquivos de IDE (Ex: VSCode)
+# ⚙️ Configurações de IDEs e Editores
 .vscode/
+.idea/
+*.swp
+*.swo
+
+# 🧪 Arquivos temporários e logs
+*.log
+*.tmp
+.DS_Store
+
+# 📦 Build e distribuição (caso futuramente publique pacotes)
+build/
+dist/
+*.egg-info/

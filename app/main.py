@@ -1,11 +1,11 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, status
 from sqlmodel import Session, select
 from typing import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from .models import Movie
 from .database import create_db_and_tables, get_session
-from .schemas import MovieCreate
+from .schemas import MovieCreate, MovieUpdate, MovieResponse
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
@@ -36,7 +36,7 @@ def read_Movies(session: Session = Depends(get_session)):
 
 #-------------------------------------------------------------------------------
 
-#Cria um novo filme no banco de dados
+#CREATE - Cria um novo filme no banco de dados
 @app.post("/movies/", response_model=Movie)
 def create_movie(movie: MovieCreate, session: Session = Depends(get_session)):
     db_movie = Movie(**movie.model_dump())
@@ -47,7 +47,7 @@ def create_movie(movie: MovieCreate, session: Session = Depends(get_session)):
 
     return db_movie
 
-#Busca todos os filmes
+# READ ALL - Busca todos os filmes
 @app.get("/movies/", response_model=list[Movie])
 def read_all_movies(session: Session = Depends(get_session)):
     statement = select(Movie)
@@ -57,27 +57,47 @@ def read_all_movies(session: Session = Depends(get_session)):
     return movies
 
 
-#Busca filme por ID
+#READ ONE - Busca filme por ID
 @app.get("/movies/{movie_id}", response_model=Movie)
 def read_movie(movie_id: int, session: Session = Depends(get_session)):
     movie = session.get(Movie, movie_id)
 
     if not movie:
         raise HTTPException(
-            status_code = 404,
+            status_code = status.HTTP_404_NOT_FOUND,
             detail=f"Movie with ID {movie_id} not found."
         )
     
     return movie
 
+#(UPDATE) - Atualiza campos do objeto existente (parcial)
+@app.patch("/movies/{movie_id}", response_model=MovieResponse)
+def update_movie(
+    movie_id: int,
+    movie_update: MovieUpdate,
+    session: Session = Depends(get_session)
+):
+    db_movie = session.get(Movie, movie_id)
 
+    if not db_movie:
+        raise HTTPException(
+            status_code = status.HTTP_404_NOT_FOUND,
+            detail = f"Movie with ID {movie_id} not found."
+        )
 
-# Buscas Específicas
+    update_data = movie_update.dict(exclude_unset=True)
 
-#-------------------------------------------------------------------------------
+    if not update_data:
+        raise HTTPException(
+            status_code = status.HTTP_400_BAD_REQUEST,
+            detail = f"No fields provided for the update."
+        )
+    
+    for Field, value in update_data.items():
+        setattr(db_movie, Field, value)
+    
+    session.add(db_movie)
+    session.commit()
+    session.refresh(db_movie)
 
-
-
-# Buscas Avançadas
-
-#-------------------------------------------------------------------------------
+    return db_movie
