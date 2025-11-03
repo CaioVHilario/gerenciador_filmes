@@ -141,3 +141,37 @@ def read_movie_by_title(
     movies = results.all()
     return movies
 
+#READ OE - Busca por filme pelo nome do diretor
+@router.get("/search/director/advanced", response_model=list[Movie])
+def read_movie_by_director(
+    q: str = Query(..., min_length=1, description="Termo de busca do diretor"),
+    exact_match: bool = Query(False, description="Busca exata (vs parcial)"),
+    sort_by: str = Query("title", description="Como ordenar: title, year ou rating"),
+    sort_order: str = Query("asc", description="Direção: asc ou desc"),
+    session: Session = Depends(get_session)
+):
+    
+    statement = select(Movie)
+
+    if exact_match:
+        statement = statement.where(Movie.director == q)
+    else:
+        search_term = f"%{q}%"
+        statement = statement.where(Movie.director.ilike(search_term))
+    
+    if sort_by == "year":
+        order_field = Movie.year
+    elif sort_by == "ratting":
+        order_field = Movie.rating
+    else:
+        order_field = Movie.title
+    
+    if sort_order == "desc":
+        statement = statement.order_by(order_field.desc())
+    else:
+        statement = statement.order_by(order_field.desc())
+    
+    results = session.exec(statement)
+    movie = results.all()
+    return movie
+
