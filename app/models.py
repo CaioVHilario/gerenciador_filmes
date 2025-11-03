@@ -14,4 +14,4 @@ class Movie(SQLModel, table=True):
     rating: Optional[int] = Field(default=None, ge=0, le=5) #campo de avaliação do filme 
     created_at: datetime = Field(default_factory=datetime.utcnow)
     update_at: datetime = Field(default_factory=datetime.utcnow)
-    # comment: Optional[str] = Field(default=None) #Breve comentario de opnião do filme
+    # description: Optional[str] = Field(default=None) #Breve comentario de opnião/descrição do filme
