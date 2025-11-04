@@ -181,18 +181,15 @@ gerenciador_filmes/
     
     
 ### 🔄 Em Desenvolvimento
-    
-- Busca inteligente (`/movies/search/smart`)
-    
-
-### 📋 Planejado
 
 - **Autenticação JWT** - Sistema de usuários e segurança
 
 - **PostgreSQL** - Migração do banco de dados
 
 - **Testes com Pytest** - Qualidade e confiabilidade do código
+
 - **Docker** - Containerização da aplicação
+
 - **Paginação** - Melhoria de performance em listas
     
 
