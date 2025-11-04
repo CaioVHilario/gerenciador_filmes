@@ -175,3 +175,35 @@ def read_movie_by_director(
     movie = results.all()
     return movie
 
+#READ ONE - Busca por filmes por gênero
+@router.get("/search/genre/advanced", response_model=list[Movie])
+def read_movies_by_genre(
+    q: str = Query(..., min_length=1, description="Termo de busca do gênero"),
+    exact_match: bool = Query(False, description="Busca exata (vs parcial)"),
+    sort_by = Query("Title", description="Como ordenar: title, year ou rating"),
+    sort_order = Query("asc", description="Direção: asc ou desc"),
+    session: Session = Depends(get_session)
+):
+    statement = select(Movie)
+
+    if exact_match:
+        statement = statement.where(Movie.genre == q)
+    else:
+        search_term = f"%{q}%"
+        statement = statement.where(Movie.genre.ilike(search_term))
+
+    if sort_by == "year":
+        order_field = Movie.year
+    elif sort_by == "rating":
+        order_field = Movie.rating
+    else:
+        order_field = Movie.title
+    
+    if sort_order == "desc":
+        statement = statement.order_by(order_field.desc())
+    else:
+        statement = statement.order_by(order_field.asc())
+
+    results = session.exec(statement)
+    movie = results.all()
+    return movie
