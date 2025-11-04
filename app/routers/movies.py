@@ -1,5 +1,8 @@
-from sqlmodel import Session, select
+from sqlmodel import Session, select, SQLModel, func
 from fastapi import Depends, APIRouter, status, HTTPException, Query
+from typing import Optional
+
+import sqlmodel
 
 from ..database import get_session
 from ..schemas import MovieCreate, MovieResponse, MovieUpdate
@@ -175,7 +178,7 @@ def read_movie_by_director(
     movie = results.all()
     return movie
 
-#READ ONE - Busca por filmes por gênero
+#READ - Busca por filmes por gênero
 @router.get("/search/genre/advanced", response_model=list[Movie])
 def read_movies_by_genre(
     q: str = Query(..., min_length=1, description="Termo de busca do gênero"),
@@ -207,3 +210,108 @@ def read_movies_by_genre(
     results = session.exec(statement)
     movie = results.all()
     return movie
+
+#READ - Busca filmes com filtros, ordenação e paginação
+@router.get("/search/filters/advanced", response_model=dict)
+def search_movies_with_filters_advanced(
+    title: Optional[str] = Query(None, description="Filtrar por título (parcial)"),
+    min_year: Optional[int] = Query(None, ge=1888, le=2100, description="Ano mínimo"),
+    max_year: Optional[int] = Query(None, ge=1888, le=2100, description="Ano máximo"),
+    director: Optional[str] = Query(None, description="Filtrar por diretor (parcial)"),
+    min_rating: Optional[int] = Query(None, ge=1, le=5, description="Avaliação mínima"),
+    max_rating: Optional[int] = Query(None, ge=1, le=5, description="Avaliação máxima"),
+    genre: Optional[str] = Query(None, description="Filtrar por gênero (parcial)"),
+    sort_by: str = Query("title", description="Campo para ordenar: year ou rating"),
+    sort_order: str = Query("asc", description="Direção: asc ou desc"),
+    skip: int = Query(0, ge=0, description="Número de rgistros para pular"),
+    limit: int = Query(100, ge=1, le=1000, description="Número máximo de registros"),
+    session: Session = Depends(get_session)
+):
+    
+    filters_provided = any([
+        title is not None,
+        director is not None,
+        genre is not None,
+        min_year is not None,
+        max_year is not None,
+        min_rating is not None,
+        max_rating is not None
+    ])
+    
+    if not filters_provided:
+        raise HTTPException(
+            status_code= status.HTTP_400_BAD_REQUEST,
+            detail="Pelo menos um filtro deve ser fornecido (title, director, " \
+            "genre, min_year, max_year, min_rating, max_rating)"
+        )
+
+    statement = select(Movie)
+    count_statement = select(sqlmodel.func.count(Movie.id))
+
+    if title:
+        statement = statement.where(Movie.title.ilike(f"%{title}%"))
+        count_statement = count_statement.where(Movie.title.ilike(f"%{title}%"))
+    if director:
+        statement = statement.where(Movie.director.ilike(f"%{director}%"))
+        count_statement = count_statement.where(Movie.director.ilike(f"%{director}%"))
+    if genre:
+        statement = statement.where(Movie.genre.ilike(f"%{genre}%"))
+        count_statement = count_statement.where(Movie.genre.ilike(f"%{genre}%"))
+    if min_year:
+        statement = statement.where(Movie.year >= min_year)
+        count_statement = count_statement.where(Movie.year >= min_year)
+    if max_year:
+        statement = statement.where(Movie.year <= max_year)
+        count_statement = count_statement.where(Movie.year <= max_year)
+    if min_rating:
+        statement = statement.where(Movie.rating >= min_rating)
+        count_statement = count_statement.where(Movie.rating >= min_rating)
+    if max_rating:
+        statement = statement.where(Movie.rating <= max_rating)
+        count_statement = count_statement.where(Movie.rating <= max_rating)
+
+    # count_statement = select(sqlmodel.func.count(Movie.id))
+
+    # if title:
+    #     count_statement = count_statement.where(Movie.title.ilike(f"%{title}%"))
+    # if director:
+    #     count_statement = count_statement.where(Movie.director.ilike(f"%{director}%"))
+    # if genre:
+    #     count_statement = count_statement.where(Movie.genre.ilike(f"%{genre}%"))
+    # if min_year:
+    #     count_statement = count_statement.where(Movie.year >= min_year)
+    # if max_year:
+    #     count_statement = count_statement.where(Movie.year <= max_year)
+    # if min_rating:
+    #     count_statement = count_statement.where(Movie.rating >= min_rating)
+    # if max_rating:
+    #     count_statement = count_statement.where(Movie.rating <= max_rating)
+
+    total_count = session.exec(count_statement).one()
+
+    if sort_by == "year":
+        order_field = Movie.year
+    elif sort_by == "rating":
+        order_field = Movie.rating
+    else:
+        order_field = Movie.title
+
+    if sort_order == "desc":
+        statement = statement.order_by(order_field.desc())
+    else:
+        statement = statement.order_by(order_field.asc())
+    
+    statement = statement.offset(skip).limit(limit)
+
+    results = session.exec(statement)
+    movies = results.all()
+
+    # return movies
+
+    return {
+        "total": total_count,
+        "skip": skip,
+        "limit": limit,
+        "has_more": (skip + len(movies)) < total_count,
+        "movies": movies
+    }
