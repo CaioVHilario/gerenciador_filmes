@@ -270,23 +270,6 @@ def search_movies_with_filters_advanced(
         statement = statement.where(Movie.rating <= max_rating)
         count_statement = count_statement.where(Movie.rating <= max_rating)
 
-    # count_statement = select(sqlmodel.func.count(Movie.id))
-
-    # if title:
-    #     count_statement = count_statement.where(Movie.title.ilike(f"%{title}%"))
-    # if director:
-    #     count_statement = count_statement.where(Movie.director.ilike(f"%{director}%"))
-    # if genre:
-    #     count_statement = count_statement.where(Movie.genre.ilike(f"%{genre}%"))
-    # if min_year:
-    #     count_statement = count_statement.where(Movie.year >= min_year)
-    # if max_year:
-    #     count_statement = count_statement.where(Movie.year <= max_year)
-    # if min_rating:
-    #     count_statement = count_statement.where(Movie.rating >= min_rating)
-    # if max_rating:
-    #     count_statement = count_statement.where(Movie.rating <= max_rating)
-
     total_count = session.exec(count_statement).one()
 
     if sort_by == "year":
@@ -315,3 +298,40 @@ def search_movies_with_filters_advanced(
         "has_more": (skip + len(movies)) < total_count,
         "movies": movies
     }
+
+#READ - Busca em tempo real (typeahead/search-as-you-type)
+@router.get("/search/instant", response_model=list[Movie])
+def instant_search(
+    q: str = Query(..., description=""),
+    limit: int = Query(8, ge=1, le=20, description=""),
+    session: Session = Depends(get_session)
+):
+    
+    if not q or len(q.strip()) == 0:
+        return []
+    
+    search_term = f"%{q.strip()}%"
+
+    # Busca em multiplos campos com ordenação por relevância
+    statement = (
+        select(Movie)
+        .where(
+            (Movie.title.ilike(search_term)) |
+            (Movie.director.ilike(search_term)) |
+            (Movie.genre.ilike(search_term))
+        )
+        .order_by(
+            #Filmes que o título começa com o termo de busca
+            Movie.title.startswith(q.strip()).desc(),
+            #Filmes mais populares (mais bem avaliados)
+            Movie.rating.desc(),
+            #Por fim, em ordem alfabetica
+            Movie.title.asc()
+        )
+        .limit(limit)
+    )
+
+    results = session.exec(statement)
+    movies = results.all()
+
+    return movies

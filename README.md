@@ -173,14 +173,14 @@ gerenciador_filmes/
     
 - Buscas por título, diretor e gênero
 
+- Busca com filtros múltiplos
+
+- Busca em tempo real
+
 - Validação de dados Pydantic
     
-
-### 🔄 Em Desenvolvimento
-
-- Busca com filtros múltiplos (`/movies/search`)
     
-- Busca em tempo real (`/movies/search/instant`)
+### 🔄 Em Desenvolvimento
     
 - Busca inteligente (`/movies/search/smart`)
     
