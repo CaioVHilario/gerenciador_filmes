@@ -3,9 +3,8 @@ from sqlmodel import Session, select
 from typing import AsyncGenerator
 from contextlib import asynccontextmanager
 
-from .models import Movie
 from .routers import movies
-from .database import create_db_and_tables, get_session
+from .database import create_db_and_tables
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
@@ -27,9 +26,3 @@ app.include_router(movies.router)
 @app.get("/")
 def read_root():
     return {"message": "Bem-vindo ao Gerenciador de Lista de Filmes!"}
-
-#Lista todos os filmes na URL /movies/
-@app.get("/movies/")
-def read_Movies(session: Session = Depends(get_session)):
-    movies = session.exec(select(Movie)).all()
-    return movies

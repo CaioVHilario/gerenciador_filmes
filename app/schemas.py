@@ -1,6 +1,20 @@
 from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional
+from typing import Optional, TypeVar, Generic, List
+
+T = TypeVar('T')
+
+class PaginatedResponse(BaseModel, Generic[T]):
+    data: List[T]       #Lista de dados (filmes, usuarios, ...)
+    total: int          #Total de registros no db
+    page: int           #Número da pagina atual
+    page_size: int      #Número de ítens na pagina
+    total_pages: int    #Número de paginas
+    has_next: bool      #Informa se tem uma pagina depois
+    has_prev: bool      #Informa se tem pagina anterior
+
+    class Config:
+        from_attributes = True
 
 class MovieCreate(BaseModel):
     title: str
@@ -29,5 +43,5 @@ class MovieResponse(BaseModel):
     created_at: datetime
     update_at: datetime 
 
-class Config:
-    from_attributes = True
+    class Config:
+        from_attributes = True

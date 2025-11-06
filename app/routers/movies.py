@@ -1,14 +1,48 @@
-from sqlmodel import Session, select, SQLModel, func
+from sqlmodel import Session, select, func
 from fastapi import Depends, APIRouter, status, HTTPException, Query
-from typing import Optional
+from typing import Optional, List
+from math import ceil
 
 import sqlmodel
 
 from ..database import get_session
-from ..schemas import MovieCreate, MovieResponse, MovieUpdate
+from ..schemas import MovieCreate, MovieResponse, MovieUpdate, PaginatedResponse
 from ..models import Movie
 
 router = APIRouter(prefix="/movies", tags=["movies"])
+
+#Funções para paginação
+
+#-------------------------------------------------------------------------------
+
+def apply_pagination(statement, page: int, page_size: int):
+
+    #Evita erros de passar numeração de pagina 0 ou negativa
+    if page < 1:
+        page = 1
+    
+    #calcula quantos itens devem ser pulados para eexibir somente os correspondes da pagina
+    skip = (page - 1) * page_size   
+    return statement.offset(skip).limit(page_size)
+
+def calcule_pagination_metadata(
+        total_itens: int, 
+        page: int, 
+        page_size: int
+        ) -> dict:
+    
+    #calcula o número de paginas arredondando pra cima a divisão dos itens pelo tamanho da pagina
+    total_pages = ceil(total_itens/page_size) if total_itens > 0 else 1
+
+    return {
+        "total": total_itens,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": total_pages,
+        "has_next": page < total_pages,
+        "has_prev": page > 1
+    }
+
 
 #CRUD BÁSICO
 
@@ -25,15 +59,31 @@ def create_movie(movie: MovieCreate, session: Session = Depends(get_session)):
 
     return db_movie
 
-# READ ALL - Busca todos os filmes
-@router.get("/", response_model=list[Movie])
-def read_all_movies(session: Session = Depends(get_session)):
+# READ ALL - Busca todos os filmes com paginação
+@router.get("/", response_model=PaginatedResponse[Movie])
+def read_all_movies(
+    page: int = Query(1, ge=1, description="Número da página"),
+    page_size: int = Query(20, ge=1, le=100, description="Número de itens por página"),
+    session: Session = Depends(get_session)
+    ):
+    count_statement = select(sqlmodel.func.count(Movie.id))
+    total_movies = session.exec(count_statement).one()
+
+    if isinstance(total_movies, tuple):
+        total_movies = total_movies[0]
+
     statement = select(Movie)
+    statement = apply_pagination(statement, page, page_size)
+
     results = session.exec(statement)
     movies = results.all()
 
-    return movies
+    pagination_meta = calcule_pagination_metadata(total_movies, page, page_size)
 
+    return PaginatedResponse(
+        data=movies,
+        **pagination_meta
+    )
 
 #READ ONE - Busca filme por ID
 @router.get("/{movie_id}", response_model=Movie)
@@ -110,9 +160,11 @@ def delete_movie(
 
 #BUSCA AVANÇADA
 
-#READ ONE - Busca por filme pelo título do filme
-@router.get("/search/title/advanced", response_model=list[Movie])
+#READ - Busca por filme pelo título do filme
+@router.get("/search/title/advanced", response_model=PaginatedResponse[Movie])
 def read_movie_by_title(
+    page: int = Query(1, ge=1, description="Número da página"),
+    page_size: int = Query(20, ge=1, le=100, description="Número de itens por página"),
     q: str = Query(..., min_lenght = 1, description="Termo de busca no título"),
     exact_match: bool = Query(False, description="Busca exata (vs parcial)"),
     sort_by: str = Query("title", description="Como ordenar: title, year, rating"),
@@ -121,12 +173,15 @@ def read_movie_by_title(
     ):
 
     statement = select(Movie)
+    count_statement = select(sqlmodel.func.count(Movie.id))
 
     if exact_match:
         statement = statement.where(Movie.title == q)
+        count_statement = count_statement.where(Movie.title == q)
     else:
         search_term = f"%{q}%"
         statement = statement.where(Movie.title.ilike(search_term))
+        count_statement = count_statement.where(Movie.title.ilike(search_term))
     
     if sort_by == "year":
         order_field = Movie.year
@@ -140,13 +195,25 @@ def read_movie_by_title(
     else:
         statement = statement.order_by(order_field.asc())
 
+    statement = apply_pagination(statement, page, page_size)
+
     results = session.exec(statement)
     movies = results.all()
-    return movies
 
-#READ OE - Busca por filme pelo nome do diretor
-@router.get("/search/director/advanced", response_model=list[Movie])
+    total_movies = session.exec(count_statement).one()
+
+    pagination_meta = calcule_pagination_metadata(total_movies, page, page_size)
+
+    return PaginatedResponse(
+        data=movies,
+        **pagination_meta
+    )
+
+#READ - Busca por filme pelo nome do diretor
+@router.get("/search/director/advanced", response_model=PaginatedResponse[Movie])
 def read_movie_by_director(
+    page: int = Query(1, ge=1, description="Número da página"),
+    page_size: int = Query(20, ge=1, le=100, description="Número de itens por página"),
     q: str = Query(..., min_length=1, description="Termo de busca do diretor"),
     exact_match: bool = Query(False, description="Busca exata (vs parcial)"),
     sort_by: str = Query("title", description="Como ordenar: title, year ou rating"),
@@ -155,12 +222,15 @@ def read_movie_by_director(
 ):
     
     statement = select(Movie)
+    count_statement = select(sqlmodel.func.count(Movie.id))
 
     if exact_match:
         statement = statement.where(Movie.director == q)
+        count_statement = count_statement.where(Movie.director == q)
     else:
         search_term = f"%{q}%"
         statement = statement.where(Movie.director.ilike(search_term))
+        count_statement = count_statement.where(Movie.director.ilike(search_term))
     
     if sort_by == "year":
         order_field = Movie.year
@@ -174,13 +244,25 @@ def read_movie_by_director(
     else:
         statement = statement.order_by(order_field.desc())
     
+    statement = apply_pagination(statement, page, page_size)
+
     results = session.exec(statement)
     movie = results.all()
-    return movie
+
+    total_movies = session.exec(count_statement).one()
+
+    pagination_meta = calcule_pagination_metadata(total_movies, page, page_size)
+
+    return PaginatedResponse(
+        data=movie,
+        **pagination_meta
+    )
 
 #READ - Busca por filmes por gênero
-@router.get("/search/genre/advanced", response_model=list[Movie])
+@router.get("/search/genre/advanced", response_model=PaginatedResponse[Movie])
 def read_movies_by_genre(
+    page: int = Query(1, ge=1, description="Número da página"),
+    page_size: int = Query(20, ge=1, le=100, description="Número de itens por página"),
     q: str = Query(..., min_length=1, description="Termo de busca do gênero"),
     exact_match: bool = Query(False, description="Busca exata (vs parcial)"),
     sort_by = Query("Title", description="Como ordenar: title, year ou rating"),
@@ -188,12 +270,15 @@ def read_movies_by_genre(
     session: Session = Depends(get_session)
 ):
     statement = select(Movie)
+    count_statement = select(sqlmodel.func.count(Movie.id))
 
     if exact_match:
         statement = statement.where(Movie.genre == q)
+        count_statement = count_statement.where(Movie.genre == q)
     else:
         search_term = f"%{q}%"
         statement = statement.where(Movie.genre.ilike(search_term))
+        count_statement = count_statement.where(Movie.genre.ilike(search_term))
 
     if sort_by == "year":
         order_field = Movie.year
@@ -207,13 +292,25 @@ def read_movies_by_genre(
     else:
         statement = statement.order_by(order_field.asc())
 
+    statement = apply_pagination(statement, page, page_size)
+
     results = session.exec(statement)
     movie = results.all()
-    return movie
+
+    total_movies = session.exec(count_statement).one()
+
+    pagination_meta = calcule_pagination_metadata(total_movies, page, page_size)
+
+    return PaginatedResponse(
+        data=movie,
+        **pagination_meta
+    )
 
 #READ - Busca filmes com filtros, ordenação e paginação
-@router.get("/search/filters/advanced", response_model=dict)
+@router.get("/search/filters/advanced", response_model=PaginatedResponse[Movie])
 def search_movies_with_filters_advanced(
+    page: int = Query(1, ge=1, description="Pagina atual"),
+    page_size: int = Query(20, ge=1, le=100, description="Número de itens por página"),
     title: Optional[str] = Query(None, description="Filtrar por título (parcial)"),
     min_year: Optional[int] = Query(None, ge=1888, le=2100, description="Ano mínimo"),
     max_year: Optional[int] = Query(None, ge=1888, le=2100, description="Ano máximo"),
@@ -270,7 +367,7 @@ def search_movies_with_filters_advanced(
         statement = statement.where(Movie.rating <= max_rating)
         count_statement = count_statement.where(Movie.rating <= max_rating)
 
-    total_count = session.exec(count_statement).one()
+    total_movies = session.exec(count_statement).one()
 
     if sort_by == "year":
         order_field = Movie.year
@@ -284,20 +381,19 @@ def search_movies_with_filters_advanced(
     else:
         statement = statement.order_by(order_field.asc())
     
-    statement = statement.offset(skip).limit(limit)
+    statement = apply_pagination(statement, page, page_size)
 
     results = session.exec(statement)
     movies = results.all()
 
+    pagination_meta = calcule_pagination_metadata(total_movies, page, page_size)
+
     # return movies
 
-    return {
-        "total": total_count,
-        "skip": skip,
-        "limit": limit,
-        "has_more": (skip + len(movies)) < total_count,
-        "movies": movies
-    }
+    return PaginatedResponse(
+        data=movies,
+        **pagination_meta
+    )
 
 #READ - Busca em tempo real (typeahead/search-as-you-type)
 @router.get("/search/instant", response_model=list[Movie])

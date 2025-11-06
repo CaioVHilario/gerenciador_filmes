@@ -178,6 +178,8 @@ gerenciador_filmes/
 - Busca em tempo real
 
 - Validação de dados Pydantic
+
+- Paginação
     
     
 ### 🔄 Em Desenvolvimento
