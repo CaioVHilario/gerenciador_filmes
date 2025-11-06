@@ -191,8 +191,6 @@ gerenciador_filmes/
 - **Testes com Pytest** - Qualidade e confiabilidade do código
 
 - **Docker** - Containerização da aplicação
-
-- **Paginação** - Melhoria de performance em listas
     
 
 ## 🤝 Contribuindo
