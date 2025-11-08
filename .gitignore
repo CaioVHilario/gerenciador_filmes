@@ -5,6 +5,11 @@ ENV/
 env/
 Env/
 
+# 🔒 Variáveis de Ambiente
+.env
+.env.*
+!.env.example  # Exemplo pode ser commitado
+
 # 🐍 Cache e Compilação Python
 __pycache__/
 *.py[cod]
