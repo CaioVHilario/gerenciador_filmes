@@ -81,13 +81,21 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```    
 
-4. **Execute a API**
+4. **Configure as variaveis de ambiente**
+
+```bash
+cp .env.example .env
+```
+
+5. **Edite o arquivo `.env`com as suas configurações**
+
+6. **Execute a API**
 
 ```bash
 uvicorn app.main:app --reload
 ```
 
-5. **Acesse a documentação**
+7. **Acesse a documentação**
 
 - **Swagger UI**: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
 
