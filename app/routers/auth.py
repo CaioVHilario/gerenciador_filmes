@@ -5,14 +5,14 @@ from datetime import timedelta
 
 from ..database import get_session
 from ..models import User
-from ..schemas import UserResponse, UserCreate, UserLogin, Token
+from ..schemas import UserResponse, UserCreate, Token
 from ..auth import (
     get_password_hash,
     verify_password, 
     create_access_token, 
     oauth2_scheme,
     verify_token,
-    ACESS_TOKEN_EXPIRE_MINUTES
+    ACCESS_TOKEN_EXPIRE_MINUTES
 )
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -22,10 +22,9 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 def register(user: UserCreate, session: Session = Depends(get_session)):
 
     existing_user = session.exec(
-        select(user)
+        select(User)
         .where(
-            User.email == user.email | 
-            User.username == user.username
+            (User.email == user.email) | (User.username == user.username)
         )).first()
     
     if existing_user:
@@ -56,7 +55,7 @@ def login(
     ):
     
     user = session.exec(
-        select(User).where(user.username == form_data.username)
+        select(User).where(User.username == form_data.username)
     ).first()
 
     if not user or not verify_password(form_data.password , user.hashed_password):
@@ -66,7 +65,7 @@ def login(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    access_token_expire = timedelta(minutes=ACESS_TOKEN_EXPIRE_MINUTES)
+    access_token_expire = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
 
     access_token = create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expire

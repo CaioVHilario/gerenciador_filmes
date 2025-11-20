@@ -3,7 +3,8 @@ from sqlmodel import Session, select
 from typing import AsyncGenerator
 from contextlib import asynccontextmanager
 
-from .routers import movies, auth
+from .routers.movies import router as movies_router
+from .routers.auth import router as auth_router
 from .database import create_db_and_tables
 
 @asynccontextmanager
@@ -21,7 +22,8 @@ app = FastAPI(
     version="1.0.0"
 )
 
-app.include_router(movies.router, auth.router)
+app.include_router(movies_router)
+app.include_router(auth_router)
 
 @app.get("/")
 def read_root():
