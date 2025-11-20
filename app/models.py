@@ -15,3 +15,14 @@ class Movie(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     update_at: datetime = Field(default_factory=datetime.utcnow)
     # description: Optional[str] = Field(default=None) #Breve comentario de opnião/descrição do filme
+
+class User(SQLModel, table=True):
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+
+    email: str = Field(unique=True, index=True)
+    username: str = Field(unique=True, index=True)
+    hashed_password: str
+    is_active: bool = Field(default=True)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)

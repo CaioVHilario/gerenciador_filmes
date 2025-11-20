@@ -1,43 +1,43 @@
-# 🧠 Ambiente Virtual
+# Ambiente Virtual
 venv/
 .venv/
 ENV/
 env/
 Env/
 
-# 🔒 Variáveis de Ambiente
+# Variáveis de Ambiente
 .env
 .env.*
 !.env.example  # Exemplo pode ser commitado
 
-# 🐍 Cache e Compilação Python
+# Cache e Compilação Python
 __pycache__/
 *.py[cod]
 *$py.class
 
-# 🗃️ Banco de Dados e Dados Locais
+# Banco de Dados e Dados Locais
 data/
 *.db
 *.sqlite
 *.sqlite3
 
-# ⚙️ Configurações de IDEs e Editores
+# Configurações de IDEs e Editores
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# 🧪 Arquivos temporários e logs
+# Arquivos temporários e logs
 *.log
 *.tmp
 .DS_Store
 
-# 📦 Build e distribuição (caso futuramente publique pacotes)
+# Build e distribuição (caso futuramente publique pacotes)
 build/
 dist/
 *.egg-info/
 
-# 🐳 Docker
+# Docker
 .dockerignore
 Dockerfile
 docker-compose.yml

@@ -1,6 +1,6 @@
-from sqlmodel import Session, select, func
+from sqlmodel import Session, select
 from fastapi import Depends, APIRouter, status, HTTPException, Query
-from typing import Optional, List
+from typing import Optional
 from math import ceil
 
 import sqlmodel
